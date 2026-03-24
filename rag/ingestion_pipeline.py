@@ -2,11 +2,8 @@ import os
 from pydoc import doc
 from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain_text_splitters import CharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from dotenv import load_dotenv
-
-load_dotenv()
 
 print("Starting ingestion pipeline...")
 
@@ -40,7 +37,7 @@ def split_documents(documents, chunk_size=800, chunk_overlap=0):
     return split_docs
 
 def create_vector_store(split_docs, collection_name="db/chroma_db"):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vector_store = Chroma.from_documents(documents=split_docs, embedding=embeddings, persist_directory=collection_name, collection_metadata={"hnsw:space": "cosine"})
     return vector_store
 
