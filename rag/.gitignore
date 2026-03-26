@@ -1,0 +1,13 @@
+# Virtual Environment
+venv/
+env/
+.env/
+.venv/
+rag\.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
