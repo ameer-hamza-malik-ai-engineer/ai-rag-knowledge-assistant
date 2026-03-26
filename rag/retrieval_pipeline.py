@@ -1,5 +1,15 @@
+import os
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from huggingface_hub import InferenceClient
+
+
+load_dotenv()
 
 persistent_directory = "db/chroma_db"
 
@@ -20,6 +30,28 @@ print("Query:", query)
 
 print("--Context--")
 
-for i, doc in enumerate(relevant_docs):
-    print(f"Document {i}: {doc.metadata['source']} (length: {len(doc.page_content)} characters)")
-print("Relevant Documents: ", relevant_docs)
+client = InferenceClient(
+    provider="fireworks-ai",
+    api_key=os.getenv("HUGGINGFACEHUB_API_TOKEN"),
+)
+
+prompt = ChatPromptTemplate.from_template(
+    "Answer the question based only on the following context:\n\n{context}\n\nQuestion: {question}"
+)
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+completion = client.chat.completions.create(
+    model="MiniMaxAI/MiniMax-M2.5",
+    messages=[
+        {
+            "role": "user",
+            "content": prompt.format(context=format_docs(relevant_docs), question=query)
+        }
+    ],
+    max_tokens=512,
+    temperature=0.3,
+)
+
+print(completion.choices[0].message.content)
